@@ -1,0 +1,31 @@
+# Trained model weights — too large for git, download separately (see README)
+az-sentiment-model/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Env
+.env
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Trainer checkpoints (intermediate, not final model)
+checkpoint-*/
+
+# Logs
+runs/
+wandb/
