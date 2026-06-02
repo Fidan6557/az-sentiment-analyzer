@@ -5,7 +5,10 @@ Run:
     streamlit run app.py
 
 The model directory (./az-sentiment-model) must exist locally.
-See README.md → "Model Setup" for how to obtain it.
+Alternatively, set the AZ_MODEL env variable to a HuggingFace Hub repo name:
+    AZ_MODEL=Fidan6557/az-sentiment-xlm-roberta streamlit run app.py
+
+See README.md → "Model Setup" for how to obtain the model.
 """
 
 import os
@@ -33,7 +36,12 @@ st.markdown(
 # Constants
 # ─────────────────────────────────────────────
 
-MODEL_DIR = "./az-sentiment-model"
+# FIX: support HuggingFace Hub repo via env variable.
+# Usage: AZ_MODEL=Fidan6557/az-sentiment-xlm-roberta streamlit run app.py
+# Falls back to local directory if env var is not set.
+MODEL_DIR = os.getenv("AZ_MODEL", "./az-sentiment-model")
+
+CONFIDENCE_THRESHOLD = 0.60  # below this → show low-confidence warning
 
 LABEL_MAP = {
     0: ("Mənfi", "😞", "#FF4B4B"),
@@ -46,7 +54,9 @@ LABEL_MAP = {
 
 @st.cache_resource(show_spinner="Model yüklənir, zəhmət olmasa gözləyin...")
 def load_model():
-    if not os.path.isdir(MODEL_DIR):
+    # Only check for local directory if MODEL_DIR looks like a path (not a HF repo)
+    is_local = "/" not in MODEL_DIR or MODEL_DIR.startswith(".")
+    if is_local and not os.path.isdir(MODEL_DIR):
         st.error(
             f"Model qovluğu tapılmadı: `{MODEL_DIR}`\n\n"
             "Zəhmət olmasa README.md → **Model Setup** bölməsini oxuyun "
@@ -114,6 +124,13 @@ if st.button("Analiz et 🔍", use_container_width=True):
             unsafe_allow_html=True,
         )
         st.markdown(f"**Etibar:** `{confidence:.1%}`")
+
+        # FIX: warn user when model is not confident (both classes near 50%)
+        if confidence < CONFIDENCE_THRESHOLD:
+            st.warning(
+                f"⚠️ Model bu mətn üçün əmin deyil (etibar: {confidence:.1%}). "
+                "Nəticə dəqiq olmaya bilər."
+            )
 
         st.markdown("**Bütün ehtimallar:**")
         for idx, (name, em, col) in LABEL_MAP.items():
