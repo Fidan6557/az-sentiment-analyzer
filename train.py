@@ -52,8 +52,16 @@ def score_to_label(example):
     """
     Convert raw review score to binary sentiment label.
     Returns None for neutral (score == 3) so we can filter them out.
+
+    FIX: hajili dataset uses 'stars' as the score column — checked first
+    before falling back to other common names.
     """
-    score = example.get("label") or example.get("score") or example.get("rating")
+    score = (
+        example.get("stars")    # ← actual column in hajili dataset
+        or example.get("label")
+        or example.get("score")
+        or example.get("rating")
+    )
     if score is None:
         return {"binary_label": None}
     score = int(score)
@@ -174,15 +182,16 @@ def main():
         learning_rate=args.lr,
         weight_decay=0.01,
         warmup_ratio=0.1,
-        evaluation_strategy="epoch",
+        # FIX: 'evaluation_strategy' deprecated in transformers>=4.41 → use 'eval_strategy'
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="f1",
         greater_is_better=True,
         logging_steps=50,
         seed=args.seed,
-        fp16=torch.cuda.is_available(),   # mixed precision if GPU available
-        report_to="none",                 # disable wandb / mlflow
+        fp16=torch.cuda.is_available(),
+        report_to="none",
     )
 
     # ── Trainer ──────────────────────────────────
