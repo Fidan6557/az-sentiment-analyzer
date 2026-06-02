@@ -12,6 +12,7 @@ protobuf==4.25.3
 scikit-learn==1.4.0
 
 # Data
+numpy>=1.26.0
 pandas==2.2.0
 
 # App
