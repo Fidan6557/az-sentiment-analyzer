@@ -13,7 +13,7 @@ Usage:
 """
 
 import argparse
-import os
+import inspect
 import numpy as np
 import torch
 from datasets import load_dataset
@@ -136,6 +136,30 @@ def compute_metrics(eval_pred):
     return {"accuracy": acc, "f1": f1}
 
 
+def build_training_arguments(args):
+    training_kwargs = {
+        "output_dir": args.output_dir,
+        "num_train_epochs": args.epochs,
+        "per_device_train_batch_size": args.batch_size,
+        "per_device_eval_batch_size": args.batch_size,
+        "learning_rate": args.lr,
+        "weight_decay": 0.01,
+        "warmup_ratio": 0.1,
+        "save_strategy": "epoch",
+        "load_best_model_at_end": True,
+        "metric_for_best_model": "f1",
+        "greater_is_better": True,
+        "logging_steps": 50,
+        "seed": args.seed,
+        "fp16": torch.cuda.is_available(),
+        "report_to": "none",
+    }
+    training_arg_names = inspect.signature(TrainingArguments.__init__).parameters
+    strategy_key = "eval_strategy" if "eval_strategy" in training_arg_names else "evaluation_strategy"
+    training_kwargs[strategy_key] = "epoch"
+    return TrainingArguments(**training_kwargs)
+
+
 # ─────────────────────────────────────────────
 # 5. Main
 # ─────────────────────────────────────────────
@@ -174,25 +198,7 @@ def main():
     print(f"[INFO] Train size: {len(train_ds)} | Eval size: {len(eval_ds)}")
 
     # ── Training arguments ───────────────────────
-    training_args = TrainingArguments(
-        output_dir=args.output_dir,
-        num_train_epochs=args.epochs,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
-        learning_rate=args.lr,
-        weight_decay=0.01,
-        warmup_ratio=0.1,
-        # FIX: 'evaluation_strategy' deprecated in transformers>=4.41 → use 'eval_strategy'
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        load_best_model_at_end=True,
-        metric_for_best_model="f1",
-        greater_is_better=True,
-        logging_steps=50,
-        seed=args.seed,
-        fp16=torch.cuda.is_available(),
-        report_to="none",
-    )
+    training_args = build_training_arguments(args)
 
     # ── Trainer ──────────────────────────────────
     trainer = Trainer(

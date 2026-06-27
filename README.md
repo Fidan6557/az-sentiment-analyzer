@@ -89,6 +89,15 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 ---
 
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+---
+
 ## 📂 Project Structure
 
 ```
@@ -96,8 +105,11 @@ az-sentiment-analyzer/
 ├── app.py               # Streamlit inference UI
 ├── train.py             # Fine-tuning script
 ├── requirements.txt
+├── requirements-dev.txt
+├── pytest.ini
 ├── .gitignore
 ├── README.md
+├── tests/
 └── az-sentiment-model/  # ← created after training (gitignored)
     ├── config.json
     ├── tokenizer files
